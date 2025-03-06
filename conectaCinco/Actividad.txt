@@ -1,0 +1,25 @@
+Modelar una red neuronal que pueda jugar al 5 en línea sin gravedad en un tablero de 20*20
+
+
+-----Definir el ripo de red neuronal y describir cada una de sus partes.
+Se usara una red neuronal convolucional, ya que las entradas ay estan bien definidas
+Se sabe la cantidad de entradas, que son las 400 casillas, y en esta esta definido si
+tiene o no tiene ficha, y luego a que jugador pertenece.
+En las capas ocultas se procesa la ifnormacionque conteien la casilla o espacio.
+
+
+-----Definir los patrones a utilizar
+
+
+-----Definir la función de activación es necesaria para este problema
+
+
+------Definir el numero máximo de entradas
+El numero total de casillas, en este caso 400
+
+------Que valores a la salida de la red se podrían esperar 
+Un 1 o 0 dependiendo del jugador que hay logrado conectar el numero correcto de fichas.
+
+------Cuales son los valores máximo que puede tener el bias
+
+
