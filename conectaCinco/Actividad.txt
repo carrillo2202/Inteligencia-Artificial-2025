@@ -7,19 +7,25 @@ Se sabe la cantidad de entradas, que son las 400 casillas, y en esta esta defini
 tiene o no tiene ficha, y luego a que jugador pertenece.
 En las capas ocultas se procesa la ifnormacionque conteien la casilla o espacio.
 
+*Se usara una multicapa, el tamaño de entrada es el tamaño del vector en este caso
+el tablero de 20*20
+Es una sola red neuronal, es multicapa, con 400 entradas 
+Puede que las capas intermedias no esten conetcadas todas ente todaas, osea full connected
 
 -----Definir los patrones a utilizar
-
+*los movimientos del jugador
 
 -----Definir la función de activación es necesaria para este problema
 
+*La funcion podria ser en las capas ocultas, puede ser una softmax para generar un vector de salida
 
 ------Definir el numero máximo de entradas
 El numero total de casillas, en este caso 400
+*el tamaño del tablero
 
 ------Que valores a la salida de la red se podrían esperar 
 Un 1 o 0 dependiendo del jugador que hay logrado conectar el numero correcto de fichas.
 
 ------Cuales son los valores máximo que puede tener el bias
-
+*no se sabe, el valor incial es aleatorio, con el paso de epocas se va ajustando
 
