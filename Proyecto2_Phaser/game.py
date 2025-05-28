@@ -17,6 +17,25 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 
+directory_to_save_datasets = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/datasets'
+directory_to_save_desition_tree = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/desition_tree'
+decision_tree_trained_horizontal_ball = None
+decision_tree_trained_vertical_ball = None
+modo_decision_tree = False
+
+# Variables para el modelo de red neuronal
+directory_to_save_neural_network = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/neural_network'
+neural_network_trained_horizontal_ball = None
+mode_neural_network = False
+prediction_counter_horizontal_ball = 0
+prediction_counter_vertical_ball = 0
+
+# Variables para el modelo KNN
+knn_model = None
+directory_to_save_knn = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/knn_model'
+
+last_csv_path_saved_for_horizontal_ball = ''
+last_csv_path_saved_for_vertical_ball = ''
 
 # Inicializar Pygame
 pygame.init()
@@ -87,6 +106,12 @@ bala_disparada = False
 fondo_x1 = 0
 fondo_x2 = w
 
+############
+
+
+###########
+
+
 # Función para disparar la bala
 def disparar_bala():
     global bala_disparada, velocidad_bala
@@ -99,6 +124,24 @@ def reset_bala():
     global bala, bala_disparada
     bala.x = w - 50  # Reiniciar la posición de la bala
     bala_disparada = False
+
+# Función para disparar la segunda bala
+def disparar_bala2():
+    global bala2_disparada, bala2, velocidad_bala2
+    if not bala2_disparada:
+        bala2.x = w - 950
+        bala2.y = 0
+        #velocidad_bala2 = random.randint(7, 12)  # Velocidad aleatoria hacia abajo
+        velocidad_bala2 = 3  # Velocidad constante hacia abajo
+        bala2_disparada = True
+
+# Función para reiniciar la posición de la segunda bala
+def reset_bala2():
+    global bala2, bala2_disparada
+    bala2.x = w - 950
+    bala2.y = 0
+    bala2_disparada = False
+
 
 # Función para manejar el salto
 def manejar_salto():
@@ -115,9 +158,26 @@ def manejar_salto():
             salto_altura = 15  # Restablecer la velocidad de salto
             en_suelo = True
 
+# Función para manejar el retroceso
+def manejar_retroceso():
+    global jugador, retroceso, retroceso_distancia, regreso, en_pocision_inicial
+
+    if retroceso:
+        jugador.x += retroceso_distancia  # Mover al jugador hacia atras
+        retroceso_distancia -= regreso  # Aplicar gravedad (reduce la velocidad del retroceso)
+
+        # Si el jugador llega a la posición inicial, detener el retroceso
+        if jugador.x <= 0:
+            jugador.x = 50
+            retroceso = False
+            retroceso_distancia = 10
+            en_pocision_inicial = True
+
+
 # Función para actualizar el juego
 def update():
     global bala, velocidad_bala, current_frame, frame_count, fondo_x1, fondo_x2
+    global modo_decision_tree, salto
 
     # Mover el fondo
     fondo_x1 -= 1
@@ -146,6 +206,7 @@ def update():
 
     # Dibujar la nave
     pantalla.blit(nave_img, (nave.x, nave.y))
+    pantalla.blit(nave_img, (nave2.x, nave2.y))
 
     # Mover y dibujar la bala
     if bala_disparada:
@@ -161,6 +222,25 @@ def update():
     if jugador.colliderect(bala):
         print("Colisión detectada!")
         reiniciar_juego()  # Terminar el juego y mostrar el menú
+   
+    # Mover y dibujar la segunda bala si está en modo 2 balas
+    if modo_2_balas:
+        if bala2_disparada:
+            bala2.y += velocidad_bala2
+        else:
+            disparar_bala2()
+
+        # Si la bala2 sale de la pantalla, reiniciar su posición
+        if bala2.y > h:
+            reset_bala2()
+
+        pantalla.blit(bala_img, (bala2.x, bala2.y))
+
+        # Colisión entre la bala2 y el jugador
+        if jugador.colliderect(bala2):
+            print("Colisión con bala 2 detectada!")
+            reiniciar_juego()
+
 
 # Función para guardar datos del modelo en modo manual
 def guardar_datos():
