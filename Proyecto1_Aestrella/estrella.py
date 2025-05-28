@@ -2,7 +2,7 @@ import pygame
 
 pygame.init()
 # Configuraciones iniciales
-ANCHO_VENTANA = 800
+ANCHO_VENTANA = 700
 VENTANA = pygame.display.set_mode((ANCHO_VENTANA, ANCHO_VENTANA))
 pygame.display.set_caption("Visualización de Nodos")
 
@@ -18,7 +18,7 @@ RED = (217, 136, 128)
 BLUE = (133, 193, 233)
 CURRENT_BLUE = (27, 79, 114)
 
-FILAS = 11
+FILAS = 10
 
 
 class Nodo:
