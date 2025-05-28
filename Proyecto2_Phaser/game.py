@@ -62,14 +62,23 @@ salto_altura = 15  # Velocidad inicial de salto
 gravedad = 1
 en_suelo = True
 
+# Variables de retroceso
+retroceso = False
+retroceso_distancia = 10
+regreso = 0.5
+en_pocision_inicial = True
+
 # Variables de pausa y menú
 pausa = False
 fuente = pygame.font.SysFont('Arial', 24)
 menu_activo = True
 modo_auto = False  # Indica si el modo de juego es automático
+modo_manual = False
+modo_2_balas = False
 
 # Lista para guardar los datos de velocidad, distancia y salto (target)
 datos_modelo = []
+datos_modelo_vertical_ball = []
 
 # Cargar las imágenes
 jugador_frames = [
@@ -100,14 +109,21 @@ frame_speed = 10  # Cuántos frames antes de cambiar a la siguiente imagen
 frame_count = 0
 
 # Variables para la bala
-velocidad_bala = -10  # Velocidad de la bala hacia la izquierda
+velocidad_bala = -20  # Velocidad de la bala hacia la izquierda
 bala_disparada = False
+
+# Variables para la segunda bala
+bala2 = pygame.Rect(50, h - 100, 16, 16)
+velocidad_bala2 = 3  # Velocidad de la bala hacia abajo
+bala2_disparada = False
 
 # Variables para el fondo en movimiento
 fondo_x1 = 0
 fondo_x2 = w
 
 ############
+
+##Implementacion de modelos
 
 def cargar_modelo_neural_network():
     global neural_network_trained_horizontal_ball, neural_network_trained_vertical_ball
@@ -320,6 +336,87 @@ def generate_desition_treee():
     joblib.dump(clf_vertical, model_path_vertical_ball)
     print(f"Modelo de árbol de decisión guardado en: {model_path_horizontal_ball}")
 
+### ---------------- KNN ----------------- ###
+
+def cargar_modelo_knn():
+    global knn_model_horizontal_ball, knn_model_vertical_ball
+    try:
+        model_path_horizontal_ball = os.path.join(directory_to_save_knn, 'knn_model_horizontal_ball.joblib')
+        knn_model_horizontal_ball = joblib.load(model_path_horizontal_ball)
+        model_path_vertical_ball = os.path.join(directory_to_save_knn, 'knn_model_vertical_ball.joblib')
+        knn_model_vertical_ball = joblib.load(model_path_vertical_ball)
+        print("Modelos KNN cargados exitosamente.")
+    except:
+        print("No se pudo cargar el modelo KNN.")
+
+def predecir_salto_knn(velocidad_bala, desplazamiento_bala):
+    if knn_model_horizontal_ball is None:
+        print("El modelo KNN no está cargado.")
+        return False
+
+    # Preparar los datos de entrada
+    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
+
+    # Realizar la predicción
+    prediction = knn_model_horizontal_ball.predict(input_data)
+
+    # Retornar True si la predicción es 1 (salto), False en caso contrario
+    return prediction[0] == 1
+
+def predecir_retroceso_knn(velocidad_bala, desplazamiento_bala):
+    if knn_model_vertical_ball is None:
+        print("El modelo KNN no está cargado.")
+        return False
+
+    # Preparar los datos de entrada
+    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
+
+    # Realizar la predicción
+    prediction = knn_model_vertical_ball.predict(input_data)
+
+    # Retornar True si la predicción es 1 (salto), False en caso contrario
+    return prediction[0] == 1
+
+def generate_knn_model():
+    global last_csv_path_saved_for_horizontal_ball, directory_to_save_knn, last_csv_path_saved_for_vertical_ball
+
+    # Cargar el dataset
+    df_horizontal = pd.read_csv(os.path.join(last_csv_path_saved_for_horizontal_ball))
+    df_vertical = pd.read_csv(os.path.join(last_csv_path_saved_for_vertical_ball))
+
+    # Separar características (X) y etiquetas (y)
+    X_horizontal = df_horizontal[['Velocidad Bala', 'Desplazamiento Bala']].values
+    y_horizontal = df_horizontal['Estatus Salto'].values
+    X_vertical = df_vertical[['Velocidad Bala', 'Desplazamiento Bala Y']].values
+    y_vertical = df_vertical['Estatus Retroceso'].values
+
+    # Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train_vertical, X_test_vertical, y_train_vertical, y_test_vertical = train_test_split(X_vertical, y_vertical, test_size=0.2, random_state=42)
+    X_train_horizontal, X_test_horizontal, y_train_horizontal, y_test_horizontal = train_test_split(X_horizontal, y_horizontal, test_size=0.2, random_state=42)
+
+    # Crear el modelo KNN
+    knn_horizontal = KNeighborsClassifier(n_neighbors=3)  # Usar 3 vecinos como ejemplo
+    knn_vertical = KNeighborsClassifier(n_neighbors=3)  # Usar 3 vecinos como ejemplo
+
+    # Entrenar el modelo
+    knn_horizontal.fit(X_train_horizontal, y_train_horizontal)
+    knn_vertical.fit(X_train_vertical, y_train_vertical)
+
+    # Evaluar el modelo
+    score_horizontal = knn_horizontal.score(X_test_horizontal, y_test_horizontal)
+    score_vertical = knn_vertical.score(X_test_vertical, y_test_vertical)
+    print(f"Precisión del modelo KNN para la bala vertical: {score_vertical:.2f}")
+    print(f"Precisión del modelo KNN para la bala horizontal: {score_horizontal:.2f}")
+
+    # Guardar el modelo
+    os.makedirs(directory_to_save_knn, exist_ok=True)
+    model_path_vertical_ball = os.path.join(directory_to_save_knn, 'knn_model_vertical_ball.joblib')
+    joblib.dump(knn_vertical, model_path_vertical_ball)
+    print(f"Modelo KNN guardado en: {model_path_vertical_ball}")
+    model_path_horizontal_ball = os.path.join(directory_to_save_knn, 'knn_model_horizontal_ball.joblib')
+    joblib.dump(knn_horizontal, model_path_horizontal_ball)
+    print(f"Modelo KNN guardado en: {model_path_horizontal_ball}")
+
 ###########
 
 
@@ -327,7 +424,7 @@ def generate_desition_treee():
 def disparar_bala():
     global bala_disparada, velocidad_bala
     if not bala_disparada:
-        velocidad_bala = random.randint(-8, -3)  # Velocidad aleatoria negativa para la bala
+        velocidad_bala = random.randint(-7, -3)  # Velocidad aleatoria negativa para la bala
         bala_disparada = True
 
 # Función para reiniciar la posición de la bala
