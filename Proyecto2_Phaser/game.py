@@ -1,5 +1,22 @@
 import pygame
 import random
+import random
+import csv
+from datetime import datetime
+import os
+import pandas as pd
+import numpy as np
+import joblib
+from sklearn.tree import DecisionTreeClassifier
+from tensorflow.keras.models import Sequential, save_model, load_model
+from tensorflow.keras.layers import Dense
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import plot_tree
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
+
 
 # Inicializar Pygame
 pygame.init()
