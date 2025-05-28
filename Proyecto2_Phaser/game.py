@@ -109,6 +109,49 @@ fondo_x2 = w
 
 ############
 
+def cargar_modelo_neural_network():
+    global neural_network_trained_horizontal_ball, neural_network_trained_vertical_ball
+    try:
+        model_path_horizontal_ball = os.path.join(directory_to_save_neural_network, 'neural_network_model_horizontal_ball.keras')
+        neural_network_trained_horizontal_ball = load_model(model_path_horizontal_ball)
+        model_path_vertical_ball = os.path.join(directory_to_save_neural_network, 'neural_network_model_vertical_ball.keras')
+        neural_network_trained_vertical_ball = load_model(model_path_vertical_ball)
+        print("Modelo de red neuronal cargado exitosamente.")
+    except:
+        print("No se pudo cargar el modelo de red neuronal")
+
+
+def predecir_salto_neural_network(velocidad_bala, desplazamiento_bala):
+    if neural_network_trained_horizontal_ball is None:
+        print("El modelo de red neuronal no está cargado.")
+        return False
+
+    # Preparar los datos de entrada
+    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
+
+    # Realizar la predicción
+    prediction = neural_network_trained_horizontal_ball.predict(input_data, verbose=0)
+    # prediction = neural_network_trained.predict(input_data)
+
+    # La predicción será un número entre 0 y 1
+    # Podemos establecer un umbral, por ejemplo, 0.5
+    return prediction[0][0] > 0.5
+
+def predecir_retroceso_neural_network(velocidad_bala, desplazamiento_bala):
+    if neural_network_trained_vertical_ball is None:
+        print("El modelo de red neuronal no está cargado.")
+        return False
+
+    # Preparar los datos de entrada
+    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
+
+    # Realizar la predicción
+    prediction = neural_network_trained_vertical_ball.predict(input_data, verbose=0)
+    # prediction = neural_network_trained.predict(input_data)
+
+    # La predicción será un número entre 0 y 1
+    # Podemos establecer un umbral, por ejemplo, 0.5
+    return prediction[0][0] > 0.5
 
 ###########
 
