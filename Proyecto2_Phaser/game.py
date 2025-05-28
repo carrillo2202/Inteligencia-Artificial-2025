@@ -153,6 +153,71 @@ def predecir_retroceso_neural_network(velocidad_bala, desplazamiento_bala):
     # Podemos establecer un umbral, por ejemplo, 0.5
     return prediction[0][0] > 0.5
 
+def predecir_retroceso_neural_network(velocidad_bala, desplazamiento_bala):
+    if neural_network_trained_vertical_ball is None:
+        print("El modelo de red neuronal no está cargado.")
+        return False
+
+    # Preparar los datos de entrada
+    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
+
+    # Realizar la predicción
+    prediction = neural_network_trained_vertical_ball.predict(input_data, verbose=0)
+    # prediction = neural_network_trained.predict(input_data)
+
+    # La predicción será un número entre 0 y 1
+    # Podemos establecer un umbral, por ejemplo, 0.5
+    return prediction[0][0] > 0.5
+
+def generate_neural_network():
+    global last_csv_path_saved_for_horizontal_ball, directory_to_save_neural_network, last_csv_path_saved_for_vertical_ball
+
+    # Cargar el dataset
+    df_horizontal_ball = pd.read_csv(os.path.join(last_csv_path_saved_for_horizontal_ball))
+    df_vertical_ball = pd.read_csv(os.path.join(last_csv_path_saved_for_vertical_ball))
+
+    # Separar características (X) y etiquetas (y)
+    X_horizontal = df_horizontal_ball[['Velocidad Bala', 'Desplazamiento Bala']].values
+    y_horizontal = df_horizontal_ball['Estatus Salto'].values
+    X_vertical = df_vertical_ball[['Velocidad Bala', 'Desplazamiento Bala Y']].values
+    y_vertical = df_vertical_ball['Estatus Retroceso'].values
+
+    # Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train_horizontal, X_test_horizontal, y_train_horizontal, y_test_horizontal = train_test_split(X_horizontal, y_horizontal, test_size=0.2, random_state=42)
+    X_train_vertical, X_test_vertical, y_train_vertical, y_test_vertical = train_test_split(X_vertical, y_vertical, test_size=0.2, random_state=42)
+
+    # Crear el modelo de red neuronal
+    model_horizontal_ball = Sequential([
+        Dense(8, input_dim=2, activation='relu'),
+        Dense(4, activation='relu'),
+        Dense(1, activation='sigmoid')
+    ])
+    model_vertical_ball = Sequential([
+        Dense(8, input_dim=2, activation='relu'),
+        Dense(4, activation='relu'),
+        Dense(1, activation='sigmoid')
+    ])
+
+    # Compilar el modelo
+    model_horizontal_ball.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model_vertical_ball.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+    # Entrenar el modelo
+    model_horizontal_ball.fit(X_train_horizontal, y_train_horizontal, epochs=50, batch_size=32, validation_split=0.2, verbose=1)
+    model_vertical_ball.fit(X_train_vertical, y_train_vertical, epochs=50, batch_size=32, validation_split=0.2, verbose=1)
+
+    # Evaluar el modelo
+    loss_horizontal, accuracy_horizontal = model_horizontal_ball.evaluate(X_test_horizontal, y_test_horizontal, verbose=0)
+    loss_vertical, accuracy_vertical = model_vertical_ball.evaluate(X_test_vertical, y_test_vertical, verbose=0)
+    print(f"\nPrecisión en el conjunto de prueba bala 1: {accuracy_horizontal:.2f}")
+    print(f"Precisión en el conjunto de prueba bala 2: {accuracy_vertical:.2f}")
+
+    # Guardar el modelo
+    save_model(model_horizontal_ball, os.path.join(directory_to_save_neural_network, 'neural_network_model_horizontal_ball.keras'))
+    save_model(model_vertical_ball, os.path.join(directory_to_save_neural_network, 'neural_network_model_vertical_ball.keras'))
+
+    print("Modelo de red neuronal generado y guardado exitosamente.")
+
 ###########
 
 
