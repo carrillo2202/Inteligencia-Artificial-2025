@@ -18,7 +18,7 @@ RED = (217, 136, 128)
 BLUE = (133, 193, 233)
 CURRENT_BLUE = (27, 79, 114)
 
-FILAS = 10
+FILAS = 11b
 
 
 class Nodo:

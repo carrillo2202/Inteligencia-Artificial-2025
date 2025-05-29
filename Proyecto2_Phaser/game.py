@@ -17,14 +17,14 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-directory_to_save_datasets = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/datasets'
-directory_to_save_desition_tree = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/desition_tree'
+directory_to_save_datasets = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/REPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/datasets'
+directory_to_save_desition_tree = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/REPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/desition_tree'
 decision_tree_trained_horizontal_ball = None
 decision_tree_trained_vertical_ball = None
 modo_decision_tree = False
 
 # Variables para el modelo de red neuronal
-directory_to_save_neural_network = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/RESPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/neural_network'
+directory_to_save_neural_network = 'C:/Users/brayi/Desktop/NOVENO SEMESTRE/IA/REPOSITORIO/Inteligencia-Artificial-2025/Proyecto2_Phaser/neural_network'
 neural_network_trained_horizontal_ball = None
 mode_neural_network = False
 prediction_counter_horizontal_ball = 0
@@ -41,7 +41,7 @@ last_csv_path_saved_for_vertical_ball = ''
 pygame.init()
 
 # Dimensiones de la pantalla
-w, h = 800, 400
+w, h = 1000, 600
 pantalla = pygame.display.set_mode((w, h))
 pygame.display.set_caption("Juego: Disparo de Bala, Salto, Nave y Menú")
 
@@ -70,7 +70,7 @@ en_pocision_inicial = True
 
 # Variables de pausa y menú
 pausa = False
-fuente = pygame.font.SysFont('Arial', 24)
+fuente = pygame.font.SysFont('Consolas', 24)
 menu_activo = True
 modo_auto = False  # Indica si el modo de juego es automático
 modo_manual = False
@@ -153,21 +153,6 @@ def predecir_salto_neural_network(velocidad_bala, desplazamiento_bala):
     # Podemos establecer un umbral, por ejemplo, 0.5
     return prediction[0][0] > 0.5
 
-def predecir_retroceso_neural_network(velocidad_bala, desplazamiento_bala):
-    if neural_network_trained_vertical_ball is None:
-        print("El modelo de red neuronal no está cargado.")
-        return False
-
-    # Preparar los datos de entrada
-    input_data = np.array([[velocidad_bala, desplazamiento_bala]])
-
-    # Realizar la predicción
-    prediction = neural_network_trained_vertical_ball.predict(input_data, verbose=0)
-    # prediction = neural_network_trained.predict(input_data)
-
-    # La predicción será un número entre 0 y 1
-    # Podemos establecer un umbral, por ejemplo, 0.5
-    return prediction[0][0] > 0.5
 
 def predecir_retroceso_neural_network(velocidad_bala, desplazamiento_bala):
     if neural_network_trained_vertical_ball is None:
@@ -229,6 +214,7 @@ def generate_neural_network():
     print(f"Precisión en el conjunto de prueba bala 2: {accuracy_vertical:.2f}")
 
     # Guardar el modelo
+    os.makedirs(directory_to_save_neural_network, exist_ok=True)
     save_model(model_horizontal_ball, os.path.join(directory_to_save_neural_network, 'neural_network_model_horizontal_ball.keras'))
     save_model(model_vertical_ball, os.path.join(directory_to_save_neural_network, 'neural_network_model_vertical_ball.keras'))
 
@@ -419,6 +405,34 @@ def generate_knn_model():
 
 ###########
 
+def borrar_datasets_anteriores():
+    if os.path.exists(directory_to_save_datasets):
+        for archivo in os.listdir(directory_to_save_datasets):
+            if archivo.endswith(".csv"):
+                ruta_completa = os.path.join(directory_to_save_datasets, archivo)
+                os.remove(ruta_completa)
+        print("✅ Datasets anteriores eliminados.")
+
+def borrar_modelos_anteriores():
+    rutas_modelos = [
+        os.path.join(directory_to_save_neural_network, 'neural_network_model_horizontal_ball.keras'),
+        os.path.join(directory_to_save_neural_network, 'neural_network_model_vertical_ball.keras'),
+        os.path.join(directory_to_save_desition_tree, 'decision_tree_model_horizontal_ball.joblib'),
+        os.path.join(directory_to_save_desition_tree, 'decision_tree_model_vertical_ball.joblib'),
+        os.path.join(directory_to_save_knn, 'knn_model_horizontal_ball.joblib'),
+        os.path.join(directory_to_save_knn, 'knn_model_vertical_ball.joblib'),
+        os.path.join(directory_to_save_desition_tree, 'decision_tree_horizontal_ball.pdf'),
+        os.path.join(directory_to_save_desition_tree, 'decision_tree_vertical_ball.pdf')
+    ]
+
+    for ruta in rutas_modelos:
+        if os.path.exists(ruta):
+            os.remove(ruta)
+            print(f"Modelo eliminado: {ruta}")
+        else:
+            print(f"No se encontró: {ruta}")
+
+
 
 # Función para disparar la bala
 def disparar_bala():
@@ -584,6 +598,8 @@ def pausa_juego():
 
 # Función para guardar el dataset en un archivo CSV
 def save_data_set():
+    borrar_datasets_anteriores()
+    borrar_modelos_anteriores()
     global last_csv_path_saved_for_horizontal_ball, last_csv_path_saved_for_vertical_ball
     global datos_modelo, datos_modelo_vertical_ball
 
@@ -653,39 +669,47 @@ def save_data_set():
             last_csv_path_saved_for_vertical_ball = file_path_vertical_ball
             print(f"Dataset guardado exitosamente como '{last_csv_path_saved_for_horizontal_ball}'")
             print(f"Dataset guardado exitosamente como '{last_csv_path_saved_for_vertical_ball}'")
+            datos_modelo = []
+            datos_modelo_vertical_ball = []
+
         except Exception as e:
             print(f"Error al guardar el dataset: {e}")
+
 
 # Función para mostrar el menú de opciones
 def print_menu_options():
     lineas = [
-        "============ MENU =============",
-        "",
-        "Press M - Manual Mode",
-        "Press N - Auto Mode Neural Network",
-        "Press D - Auto Mode Decision Tree",
-        "Press K - Auto Mode KNN",
-        "Press S - Save DataSet",
-        "Press T - Training Models",
-        "",
-        "Press Q - Exit",
+        "╔══════════════════════════════╗",
+        "║        🤖 Game Control        ║",
+        "╠══════════════════════════════╣",
+        "║ ️  [M] Manual Play           ║",
+        "║   [N] Neural Net Mode       ║",
+        "║   [D] Decision Tree Mode    ║",
+        "║   [K] K-Nearest Mode        ║",
+        "║   [S] Save Dataset          ║",
+        "║   [T] Train All Models      ║",
+        "╠══════════════════════════════╣",
+        "║   [Q] Quit Game             ║",
+        "╚══════════════════════════════╝",
     ]
 
     # Posición inicial
-    x = w // 4
-    y = h // 2 - (len(lineas) * 20)  # Ajusta el desplazamiento vertical según el número de líneas
+    x = w // 2 - 200  # Centrar horizontalmente (ajusta según el ancho del texto)
+    y = h // 2 - (len(lineas) * 20)
 
     for linea in lineas:
         texto = fuente.render(linea, True, NEGRO)
         pantalla.blit(texto, (x, y))
-        y += 40
+        y += 35  # Espaciado vertical más compacto
     pygame.display.flip()
+
 
 # Función para entrenar los modelos
 def train_models():
-    #generate_neural_network()
+    borrar_modelos_anteriores()
+    generate_neural_network()
     generate_desition_treee()
-    #generate_knn_model()
+    generate_knn_model()
 
 # Función para mostrar el menú y seleccionar el modo de juego
 def mostrar_menu():
@@ -914,6 +938,7 @@ def main():
     global modo_decision_tree, modo_manual, modo_auto
     global bala, velocidad_bala, jugador, prediction_counter
     global retroceso, en_pocision_inicial
+
 
     mostrar_menu()  # Mostrar el menú al inicio
     correr = True
