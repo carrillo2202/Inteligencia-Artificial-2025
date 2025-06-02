@@ -18,8 +18,7 @@ RED = (217, 136, 128)
 BLUE = (133, 193, 233)
 CURRENT_BLUE = (27, 79, 114)
 
-FILAS = 11b
-
+FILAS = 11
 
 class Nodo:
     def __init__(self, fila, col, ancho, total_filas):
